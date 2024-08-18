@@ -1,0 +1,51 @@
+---
+
+- name: use ES cert-util to make temporary self-signed certs
+  block:
+    - shell: "curl -so /usr/share/elasticsearch/instances.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/instances_aio.yml"
+      become: yes
+    - shell: "curl -so /etc/elasticsearch/elasticsearch.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/elasticsearch_all_in_one.yml"
+      become: yes
+    - shell: /usr/share/elasticsearch/bin/elasticsearch-certutil cert ca --pem --in instances.yml --keep-ca-key --out ~/certs.zip
+      become: yes
+    - shell: unzip ~/certs.zip -d ~/certs
+      become: yes
+    - shell: mkdir /etc/elasticsearch/certs/ca -p
+      become: yes
+    - shell: cp -R ~/certs/ca/ ~/certs/elasticsearch/* /etc/elasticsearch/certs/
+      become: yes
+    - shell: "chown -R elasticsearch:elasticsearch /etc/elasticsearch/certs"
+      become: yes
+    - shell: chmod -R 500 /etc/elasticsearch/certs
+      become: yes
+    - shell: chmod 400 /etc/elasticsearch/certs/ca/ca.* /etc/elasticsearch/certs/elasticsearch.*
+      become: yes
+    - shell: rm -rf ~/certs/ ~/certs.zip
+      become: yes
+
+- name: start ES
+  block:
+    - systemd: daemon_reload=yes
+      become: yes
+    - systemd: enabled=yes masked=no name=elasticsearch
+      become: yes
+    - systemd: state=restarted name=elasticsearch
+      become: yes
+
+- name: generate ES credentials and save to ansible variables
+  shell: yes | /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto
+  become: yes
+  register: passwds
+
+- name: debug creds for now to stdout but dont log them
+  debug: var=passwds
+
+- name: setup variables to contain various creds
+  set_fact:
+    elastic_passwd: "{{ passwds.stdout | regex_search('^\\s*PASSWORD\\s*elastic\\s*=\\s*(\\S+)\\s*$', '\\1', multiline=true) | list | first}}"
+    apm_passwd: "{{ passwds.stdout | regex_search('^\\s*PASSWORD\\s*apm_system\\s*=\\s*(\\S+)\\s*$', '\\1', multiline=true) | list | first}}"
+    kibana_passwd: "{{ passwds.stdout | regex_search('^\\s*PASSWORD\\s*kibana\\s*=\\s*(\\S+)\\s*$', '\\1', multiline=true) | list | first}}"
+    kibana_system_passwd: "{{ passwds.stdout | regex_search('^\\s*PASSWORD\\s*kibana_system\\s*=\\s*(\\S+)\\s*$', '\\1', multiline=true) | list | first}}"
+    beat_system_passwd: "{{ passwds.stdout | regex_search('^\\s*PASSWORD\\s*beats_system\\s*=\\s*(\\S+)\\s*$', '\\1', multiline=true) | list | first}}"
+
+

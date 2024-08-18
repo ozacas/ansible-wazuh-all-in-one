@@ -1,0 +1,49 @@
+---
+
+- name: install filebeat from elastic.co repo
+  apt: name="filebeat=7.17.13" state=present
+  become: yes
+
+- name: download template for filebeat from wazuh.com
+  shell: "curl -so /etc/filebeat/filebeat.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/filebeat_all_in_one.yml"
+  become: yes
+
+- name: download alert template for filebeat
+  block: 
+    - command: curl -so /etc/filebeat/wazuh-template.json https://raw.githubusercontent.com/wazuh/wazuh/v4.5.4/extensions/elasticsearch/7.x/wazuh-template.json
+      become: yes
+    - command: chmod go+r /etc/filebeat/wazuh-template.json
+      become: yes
+
+- name: add wazuh module for filebeat
+  shell: "curl -s https://packages.wazuh.com/4.x/filebeat/wazuh-filebeat-0.2.tar.gz | tar -xvz -C /usr/share/filebeat/module"
+  become: yes
+
+- name: add elastic password to filebeat config
+  lineinfile:
+    path: /etc/filebeat/filebeat.yml
+    regexp: '^output.elasticsearch.password'
+    line: "output.elasticsearch.password: {{elastic_passwd}}"
+    state: present
+  become: yes
+
+- name: install PKI material into filebeat from ES deployment
+  block:
+    - command: cp -r /etc/elasticsearch/certs/ca/ /etc/filebeat/certs/
+      become: yes
+    - command: cp /etc/elasticsearch/certs/elasticsearch.crt /etc/filebeat/certs/filebeat.crt
+      become: yes
+    - command: cp /etc/elasticsearch/certs/elasticsearch.key /etc/filebeat/certs/filebeat.key
+      become: yes
+
+- name: start filebeat
+  systemd: daemon_reload=yes masked=no enabled=yes state=restarted name=filebeat
+  become: yes
+
+- name: verify filebeat is operational
+  block:
+    - command: systemctl is-active filebeat
+      register: filebeat_status
+    - assert:
+        that: 
+          - "'active' in filebeat_status.stdout"

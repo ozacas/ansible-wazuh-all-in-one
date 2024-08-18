@@ -1,0 +1,13 @@
+---
+
+namespace: "ozacas"
+name: "wazuh_all_in_one"
+version: "0.0.1"
+readme: "README.md"
+authors:
+    - "ozacas"
+license:
+    - "MIT"
+tags:
+    - collection
+repository: "https://www.github.com/ozacas/ansible-wazuh_all_in_one"

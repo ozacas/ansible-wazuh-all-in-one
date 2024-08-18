@@ -1,0 +1,73 @@
+---
+
+- name: remove existing plugin if any since plugin install will fail if it already exists
+  block:
+    - apt: name=kibana state=absent  # so we can purge plugin correctly
+      become: yes
+    - file: state=absent path=/usr/share/kibana/plugins/wazuh 
+      become: yes
+
+- name: install kibana on wazuh server
+  apt: name="kibana=7.17.13" state=present
+  become: yes
+
+- name: install PKI material from ES on server
+  block:
+    - command: mkdir /etc/kibana/certs/ca -p
+      become: yes
+    - command: cp -R /etc/elasticsearch/certs/ca/ /etc/kibana/certs/
+      become: yes
+    - command: cp /etc/elasticsearch/certs/elasticsearch.key /etc/kibana/certs/kibana.key
+      become: yes
+    - command: cp /etc/elasticsearch/certs/elasticsearch.crt /etc/kibana/certs/kibana.crt
+      become: yes
+    - command: chown -R kibana:kibana /etc/kibana/
+      become: yes
+    - command: chmod -R 500 /etc/kibana/certs
+      become: yes
+    - shell: chmod 440 /etc/kibana/certs/ca/ca.* /etc/kibana/certs/kibana.*
+      become: yes
+
+- name: download and install kibana config from wazuh.com
+  command: curl -so /etc/kibana/kibana.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/kibana_all_in_one.yml
+  become: yes
+
+- name: ensure ES password is set in kibana config
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: "^elasticsearch.password"
+    line: "elasticsearch.password: {{elastic_passwd}}"
+    owner: kibana
+    group: kibana
+    mode: "0640"
+  become: yes
+
+- name: setup kibana data folder
+  file: state=directory mode="0750" owner=kibana group=kibana path="/usr/share/kibana/data"
+  become: yes
+
+- name: ensure correct perms on kibana plugin folder
+  file: state=directory mode="0750" owner=kibana group=kibana path="/usr/share/kibana/plugins"
+  become: yes
+
+- name: install kibana wazuh plugin
+  command: sudo -u kibana /usr/share/kibana/bin/kibana-plugin install https://packages.wazuh.com/4.x/ui/kibana/wazuh_kibana-4.5.4_7.17.13-1.zip
+  become: yes
+  args:
+    chdir: /usr/share/kibana
+
+- name: add privileges to kibana node binary
+  command: setcap 'cap_net_bind_service=+ep' /usr/share/kibana/node/bin/node
+  become: yes
+ 
+- name: start kibana service
+  systemd: name=kibana daemon_reload=yes masked=no enabled=yes state=restarted 
+  become: yes
+
+- name: verify kibana is active
+  block:
+    - command: systemctl is-active kibana
+      register: kibana_results
+    - assert:
+        that: 
+          - "'active' in kibana_results.stdout"

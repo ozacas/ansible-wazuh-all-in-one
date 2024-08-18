@@ -1,0 +1,20 @@
+---
+
+#https://documentation.wazuh.com/4.5/deployment-options/elastic-stack/all-in-one-deployment/index.html
+- name: install elasticsearch from elastic.co
+  block:
+    - shell: "curl -s https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/elasticsearch.gpg --import && chmod 644 /usr/share/keyrings/elasticsearch.gpg"
+      become: yes
+    - shell: echo "deb [signed-by=/usr/share/keyrings/elasticsearch.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-7.x.list
+      become: yes
+    - apt: update_cache=yes name="elasticsearch=7.17.13" state=present
+      become: yes
+    - shell: "curl -so /etc/elasticsearch/elasticsearch.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/elasticsearch_all_in_one.yml"
+      become: yes
+    - file: state=directory path=/var/lib/elasticsearch owner=elasticsearch group=elasticsearch mode=0750
+      become: yes # ES doesnt create the data path for some reason... so we ensure it is present for clean setup
+
+- name: create TLS certificates and key material
+  include_tasks: "make-tls.yml"
+  # now vars are set for the rest of the ES work to use...
+

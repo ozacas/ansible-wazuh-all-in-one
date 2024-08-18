@@ -1,0 +1,14 @@
+---
+
+- name: ensure required apps are installed
+  block:
+    - apt: name={{item}} state=present
+      become: yes
+      with_items:
+        - apt-transport-https 
+        - zip 
+        - unzip 
+        - lsb-release 
+        - curl 
+        - gnupg 
+      when: "'ubuntu' in ansible_distribution|lower"

@@ -1,0 +1,11 @@
+---
+
+- name: install for ubuntu systems
+  include_tasks: "ubuntu.yml"
+  when: 
+    - "'ubuntu' in ansible_distribution|lower"
+
+- name: install for redhat systems
+  include_tasks: "redhat.yml"
+  when:
+    - "'redhat' in ansible_distribution|lower"

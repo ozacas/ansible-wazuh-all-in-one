@@ -1,0 +1,18 @@
+---
+
+- name: nuke existing creds and data iff any
+  block:
+    - apt: state=absent name=elasticsearch
+      become: yes
+      when: "wazuh_fresh_start |default(True)"
+    - file: state=absent path={{ es_data_to_nuke |default('/var/lib/elasticsearch') }}
+      become: yes
+      when: "wazuh_fresh_start |default(True)"
+
+- name: perform install for debian/ubuntu systems
+  include_tasks: "ubuntu.yml"
+  when: "'ubuntu' in ansible_distribution|lower"
+
+- name: perform install for redhat/fedora systems
+  include_tasks: "redhat.yml"
+  when: "'fedora' in ansible_distribution|lower or 'redhat' in ansible_distribution|lower"

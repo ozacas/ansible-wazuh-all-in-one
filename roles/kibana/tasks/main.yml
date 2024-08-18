@@ -1,0 +1,5 @@
+---
+
+- name: invoke ubuntu tasks on ubuntu target host
+  include_tasks: ubuntu.yml
+  when: "'ubuntu' in ansible_distribution|lower"
