@@ -11,6 +11,10 @@
   apt: name="kibana=7.17.13" state=present
   become: yes
 
+- name: ensure kibana is not bumped which will break wazuh
+  command: apt-mark hold
+  become: yes
+
 - name: install PKI material from ES on server
   block:
     - command: mkdir /etc/kibana/certs/ca -p

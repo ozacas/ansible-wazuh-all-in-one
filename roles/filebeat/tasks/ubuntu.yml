@@ -4,6 +4,10 @@
   apt: name="filebeat=7.17.13" state=present
   become: yes
 
+- name: ensure filebeat is not bumped which will break wazuh
+  command: apt-mark hold wazuh
+  become: yes
+
 - name: download template for filebeat from wazuh.com
   shell: "curl -so /etc/filebeat/filebeat.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/filebeat_all_in_one.yml"
   become: yes

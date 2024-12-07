@@ -13,6 +13,8 @@
       become: yes
     - file: state=directory path=/var/lib/elasticsearch owner=elasticsearch group=elasticsearch mode=0750
       become: yes # ES doesnt create the data path for some reason... so we ensure it is present for clean setup
+    - command: apt-mark hold elasticsearch # will break wazuh if bumped...
+      become: yes
 
 - name: create TLS certificates and key material
   include_tasks: "make-tls.yml"
