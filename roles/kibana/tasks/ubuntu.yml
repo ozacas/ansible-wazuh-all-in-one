@@ -12,7 +12,7 @@
   become: yes
 
 - name: ensure kibana is not bumped which will break wazuh
-  command: apt-mark hold
+  command: apt-mark hold kibana
   become: yes
 
 - name: install PKI material from ES on server
