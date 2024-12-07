@@ -12,6 +12,8 @@
       become: yes
     - systemd: name=wazuh-manager enabled=yes masked=no daemon_reload=yes state=restarted
       become: yes
+    - command: apt-mark hold wazuh-manager
+      become: yes
 
 - name: check it has started successfully or fail deployment
   block:
