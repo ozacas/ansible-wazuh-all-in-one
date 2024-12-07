@@ -8,7 +8,7 @@
       become: yes
     - apt: update_cache=yes
       become: yes
-    - apt: name="wazuh-manager=4.5.4-1" state=present allow_downgrade=yes # in case wrong version is already on target
+    - apt: name="wazuh-manager=4.5.4-1" state=present allow_change_held_packages=yes allow_downgrade=yes # in case wrong version is already on target
       become: yes
     - systemd: name=wazuh-manager enabled=yes masked=no daemon_reload=yes state=restarted
       become: yes

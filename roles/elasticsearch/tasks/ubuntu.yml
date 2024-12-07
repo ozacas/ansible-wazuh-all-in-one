@@ -7,7 +7,7 @@
       become: yes
     - shell: echo "deb [signed-by=/usr/share/keyrings/elasticsearch.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-7.x.list
       become: yes
-    - apt: update_cache=yes name="elasticsearch=7.17.13" state=present
+    - apt: update_cache=yes name="elasticsearch=7.17.13" state=present allow_change_held_packages=yes allow_downgrade=yes # if target has wrong version already
       become: yes
     - shell: "curl -so /etc/elasticsearch/elasticsearch.yml https://packages.wazuh.com/4.5/tpl/elastic-basic/elasticsearch_all_in_one.yml"
       become: yes

@@ -1,7 +1,7 @@
 ---
 
 - name: install filebeat from elastic.co repo
-  apt: name="filebeat=7.17.13" state=present
+  apt: name="filebeat=7.17.13" state=present allow_change_held_packages=yes allow_downgrade=yes # in case target host has wrong version already
   become: yes
 
 - name: ensure filebeat is not bumped which will break wazuh

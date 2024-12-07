@@ -8,7 +8,7 @@
       become: yes
 
 - name: install kibana on wazuh server
-  apt: name="kibana=7.17.13" state=present
+  apt: name="kibana=7.17.13" state=present allow_change_held_packages=yes allow_downgrade=yes
   become: yes
 
 - name: ensure kibana is not bumped which will break wazuh
