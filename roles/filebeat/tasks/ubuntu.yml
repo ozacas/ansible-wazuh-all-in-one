@@ -5,7 +5,7 @@
   become: yes
 
 - name: ensure filebeat is not bumped which will break wazuh
-  command: apt-mark hold wazuh
+  command: apt-mark hold filebeat
   become: yes
 
 - name: download template for filebeat from wazuh.com
