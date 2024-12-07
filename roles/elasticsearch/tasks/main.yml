@@ -2,7 +2,7 @@
 
 - name: nuke existing creds and data iff any
   block:
-    - apt: state=absent name=elasticsearch
+    - apt: state=absent name=elasticsearch allow_change_held_packages=yes allow_downgrade=yes  # in case target is in a weird state
       become: yes
       when: "wazuh_fresh_start |default(True)"
     - file: state=absent path={{ es_data_to_nuke |default('/var/lib/elasticsearch') }}
