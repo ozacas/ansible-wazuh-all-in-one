@@ -2,7 +2,7 @@
 
 - name: remove existing plugin if any since plugin install will fail if it already exists
   block:
-    - apt: name=kibana state=absent  # so we can purge plugin correctly
+    - apt: name=kibana state=absent allow_change_held_packages=yes # so we can purge plugin correctly
       become: yes
     - file: state=absent path=/usr/share/kibana/plugins/wazuh 
       become: yes
